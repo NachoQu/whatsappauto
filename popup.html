@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WA Lead Sender</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <h1>WA Lead Sender</h1>
+      <p class="hint">
+        Importa datos desde <strong>CSV</strong>, pega tabla desde <strong>Excel/Sheets</strong>, o usa URL pública de <strong>Google Sheets</strong>.
+      </p>
+
+      <label for="sourceType">Origen de datos</label>
+      <select id="sourceType">
+        <option value="csv">Archivo CSV</option>
+        <option value="table">Pegar tabla (Excel / Sheets)</option>
+        <option value="gSheets">Google Sheets (URL pública)</option>
+      </select>
+
+      <section id="csvSection" class="source-section">
+        <label for="csvFile">Archivo CSV</label>
+        <input id="csvFile" type="file" accept=".csv,text/csv" />
+      </section>
+
+      <section id="tableSection" class="source-section hidden">
+        <label for="tableInput">Pega aquí (incluye encabezados link y mensaje)</label>
+        <textarea id="tableInput" rows="6" placeholder="link\tmensaje\nhttps://wa.me/5491122334455\tHola..."></textarea>
+        <button id="parseTableBtn" class="secondary">Procesar tabla pegada</button>
+      </section>
+
+      <section id="gSheetsSection" class="source-section hidden">
+        <label for="sheetsUrl">URL de Google Sheets (publicada o compartida)</label>
+        <input id="sheetsUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." />
+        <button id="loadSheetsBtn" class="secondary">Cargar desde Google Sheets</button>
+      </section>
+
+      <label for="delayMs">Pausa entre envíos (ms)</label>
+      <input id="delayMs" type="number" min="3000" step="1000" value="8000" />
+
+      <div class="actions">
+        <button id="startBtn">Iniciar envío masivo</button>
+        <button id="stopBtn" class="secondary">Detener</button>
+      </div>
+
+      <pre id="status" aria-live="polite">Esperando datos…</pre>
+      <p class="warning">
+        Usa esta herramienta solo con contactos que hayan dado consentimiento.
+      </p>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
