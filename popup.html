@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WA Lead Sender</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <h1>WA Lead Sender</h1>
+      <p class="hint">
+        CSV con columnas <code>link</code> y <code>mensaje</code>.
+        Abre <strong>web.whatsapp.com</strong> y deja la sesión iniciada.
+      </p>
+
+      <label for="csvFile">Archivo CSV</label>
+      <input id="csvFile" type="file" accept=".csv,text/csv" />
+
+      <label for="delayMs">Pausa entre envíos (ms)</label>
+      <input id="delayMs" type="number" min="3000" step="1000" value="8000" />
+
+      <div class="actions">
+        <button id="startBtn">Iniciar envío masivo</button>
+        <button id="stopBtn" class="secondary">Detener</button>
+      </div>
+
+      <pre id="status" aria-live="polite">Esperando archivo CSV…</pre>
+      <p class="warning">
+        Usa esta herramienta solo con contactos que hayan dado consentimiento.
+      </p>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

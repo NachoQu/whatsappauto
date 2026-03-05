@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "WA Lead Sender",
+  "description": "Carga un CSV con links de WhatsApp y mensaje para automatizar envíos en WhatsApp Web.",
+  "version": "1.0.0",
+  "permissions": ["tabs", "storage"],
+  "host_permissions": ["https://web.whatsapp.com/*"],
+  "action": {
+    "default_title": "WA Lead Sender",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
