@@ -66,3 +66,10 @@ Si ves `Encabezados requeridos: link,mensaje` al pegar datos, revisa que:
 - la primera fila sea exactamente `link,mensaje` (o `link<TAB>mensaje`),
 - el valor de `mensaje` quede entre comillas cuando tiene comas,
 - y estés pegando en la caja completa desde la primera línea.
+
+
+## Si al presionar "Iniciar envío masivo" no pasa nada
+
+- Verifica que la pestaña activa sea `https://web.whatsapp.com` (no el popup ni otra web).
+- Recarga la extensión desde `chrome://extensions` después de actualizarla.
+- La extensión ahora reintenta inyectar automáticamente `content.js` si Chrome no lo detecta en la pestaña, y muestra un error claro en el estado si falla.

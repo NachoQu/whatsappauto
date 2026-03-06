@@ -192,6 +192,51 @@ const getActiveTab = async () => {
   return tabs[0];
 };
 
+const isWhatsAppWebTab = (url = '') => {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname === 'web.whatsapp.com';
+  } catch {
+    return false;
+  }
+};
+
+const sendTabMessage = (tabId, message) => new Promise((resolve, reject) => {
+  chrome.tabs.sendMessage(tabId, message, (response) => {
+    if (chrome.runtime.lastError) {
+      reject(new Error(chrome.runtime.lastError.message));
+      return;
+    }
+    resolve(response);
+  });
+});
+
+const injectContentScript = (tabId) => new Promise((resolve, reject) => {
+  chrome.scripting.executeScript({
+    target: { tabId },
+    files: ['content.js'],
+  }, () => {
+    if (chrome.runtime.lastError) {
+      reject(new Error(chrome.runtime.lastError.message));
+      return;
+    }
+    resolve();
+  });
+});
+
+const sendMessageWithRetry = async (tabId, message) => {
+  try {
+    return await sendTabMessage(tabId, message);
+  } catch (error) {
+    if (!error.message.includes('Receiving end does not exist')) {
+      throw error;
+    }
+
+    await injectContentScript(tabId);
+    return sendTabMessage(tabId, message);
+  }
+};
+
 const refreshSourceVisibility = () => {
   const sourceType = sourceTypeEl.value;
   csvSection.classList.toggle('hidden', sourceType !== 'csv');
@@ -262,7 +307,7 @@ startBtn.addEventListener('click', async () => {
   }
 
   const tab = await getActiveTab();
-  if (!tab?.id || !tab.url?.startsWith('https://web.whatsapp.com/')) {
+  if (!tab?.id || !isWhatsAppWebTab(tab.url)) {
     setStatus('Debes abrir y seleccionar una pestaña de web.whatsapp.com');
     return;
   }
@@ -273,20 +318,33 @@ startBtn.addEventListener('click', async () => {
     return;
   }
 
-  await chrome.tabs.sendMessage(tab.id, {
-    type: 'WA_BULK_START',
-    payload: { rows: parsedRows, delayMs },
-  });
+  try {
+    const response = await sendMessageWithRetry(tab.id, {
+      type: 'WA_BULK_START',
+      payload: { rows: parsedRows, delayMs },
+    });
 
-  setStatus(`Proceso enviado a WhatsApp Web.\nTotal: ${parsedRows.length}`);
+    if (!response?.ok) {
+      throw new Error(response?.error || 'No se pudo iniciar el proceso.');
+    }
+
+    setStatus(`Proceso iniciado en WhatsApp Web.\nTotal: ${parsedRows.length}`);
+  } catch (error) {
+    setStatus(`Error al iniciar: ${error.message}`);
+  }
 });
 
 stopBtn.addEventListener('click', async () => {
   const tab = await getActiveTab();
-  if (!tab?.id) {
+  if (!tab?.id || !isWhatsAppWebTab(tab.url)) {
+    setStatus('Selecciona la pestaña de web.whatsapp.com para detener.');
     return;
   }
 
-  await chrome.tabs.sendMessage(tab.id, { type: 'WA_BULK_STOP' });
-  setStatus('Solicitud de detención enviada.');
+  try {
+    await sendMessageWithRetry(tab.id, { type: 'WA_BULK_STOP' });
+    setStatus('Solicitud de detención enviada.');
+  } catch (error) {
+    setStatus(`Error al detener: ${error.message}`);
+  }
 });

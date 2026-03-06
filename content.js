@@ -83,11 +83,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
     }
 
-    processRows(rows, delayMs || 8000)
-      .then(() => sendResponse({ ok: true }))
-      .catch((error) => sendResponse({ ok: false, error: error.message }));
+    sendResponse({ ok: true, started: true });
 
-    return true;
+    processRows(rows, delayMs || 8000).catch((error) => {
+      running = false;
+      console.error(`[WA Bulk] Error general: ${error.message}`);
+    });
+
+    return false;
   }
 
   return false;
