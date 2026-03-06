@@ -68,17 +68,70 @@ const getDelimiterFromHeader = (headerLine) => {
   return selected;
 };
 
-const parseDelimitedText = (text, delimiter) => {
-  const lines = text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
+const parseRecords = (text, delimiter) => {
+  const records = [];
+  let row = [];
+  let current = '';
+  let inQuotes = false;
 
-  if (lines.length < 2) {
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (char === '"' && inQuotes && next === '"') {
+      current += '"';
+      i += 1;
+      continue;
+    }
+
+    if (char === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+
+    if (!inQuotes && char === delimiter) {
+      row.push(current.trim());
+      current = '';
+      continue;
+    }
+
+    if (!inQuotes && (char === '\n' || char === '\r')) {
+      if (char === '\r' && next === '\n') {
+        i += 1;
+      }
+
+      row.push(current.trim());
+      current = '';
+
+      if (row.some((cell) => cell.length > 0)) {
+        records.push(row);
+      }
+
+      row = [];
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.length > 0 || row.length > 0) {
+    row.push(current.trim());
+    if (row.some((cell) => cell.length > 0)) {
+      records.push(row);
+    }
+  }
+
+  return records;
+};
+
+const parseDelimitedText = (text, delimiter) => {
+  const records = parseRecords(text, delimiter);
+
+  if (records.length < 2) {
     throw new Error('La tabla debe tener encabezado y al menos una fila.');
   }
 
-  const headers = splitRow(lines[0], delimiter).map((h) => h.toLowerCase());
+  const headers = records[0].map((h) => h.toLowerCase());
   const linkIndex = headers.indexOf('link');
   const mensajeIndex = headers.indexOf('mensaje');
 
@@ -86,16 +139,13 @@ const parseDelimitedText = (text, delimiter) => {
     throw new Error('Encabezados requeridos: link,mensaje');
   }
 
-  const rows = lines
+  const rows = records
     .slice(1)
-    .map((line, idx) => {
-      const cols = splitRow(line, delimiter);
-      return {
-        row: idx + 2,
-        link: (cols[linkIndex] || '').trim(),
-        mensaje: (cols[mensajeIndex] || '').trim(),
-      };
-    })
+    .map((cols, idx) => ({
+      row: idx + 2,
+      link: (cols[linkIndex] || '').trim(),
+      mensaje: (cols[mensajeIndex] || '').trim(),
+    }))
     .filter((r) => r.link && r.mensaje);
 
   if (!rows.length) {
@@ -111,7 +161,7 @@ const parseDocumentText = (text) => {
   return parseDelimitedText(text, delimiter);
 };
 
-const parseTable = (text) => parseDelimitedText(text, '\t');
+const parseTable = (text) => parseDocumentText(text);
 
 const getSheetsCsvUrl = (inputUrl) => {
   const url = new URL(inputUrl);

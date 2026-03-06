@@ -45,7 +45,7 @@ https://web.whatsapp.com/send?phone=5491199988877,"¿Te interesa recibir info?"
 2. Abre el popup de la extensión.
 3. Elige origen:
    - **Documento**: sube CSV/TXT/TSV (coma, punto y coma o tabulador).
-   - **Pegar tabla (Excel/Sheets)**: copia y pega rango con encabezados.
+   - **Pegar tabla (Excel/Sheets)**: copia y pega rango con encabezados (también acepta texto CSV pegado).
    - **Google Sheets URL**: pega URL de hoja (incluye soporte para `#gid=`).
 4. Ajusta pausa entre envíos (recomendado >= 8000 ms).
 5. Pulsa **Iniciar envío masivo**.
@@ -57,3 +57,12 @@ https://web.whatsapp.com/send?phone=5491199988877,"¿Te interesa recibir info?"
 - Parser de documentos detecta delimitador automáticamente (`,`, `;`, `\t`).
 - `content.js` navega por cada chat, espera botón enviar y hace click.
 - Links `wa.me` se transforman a URLs `web.whatsapp.com/send`.
+
+
+## Solución a error común
+
+Si ves `Encabezados requeridos: link,mensaje` al pegar datos, revisa que:
+
+- la primera fila sea exactamente `link,mensaje` (o `link<TAB>mensaje`),
+- el valor de `mensaje` quede entre comillas cuando tiene comas,
+- y estés pegando en la caja completa desde la primera línea.
