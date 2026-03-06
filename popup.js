@@ -52,6 +52,22 @@ const splitRow = (line, delimiter) => {
   return cols;
 };
 
+const getDelimiterFromHeader = (headerLine) => {
+  const delimiterCandidates = [',', ';', '\t'];
+  let selected = ',';
+  let maxColumns = 0;
+
+  for (const delimiter of delimiterCandidates) {
+    const colCount = splitRow(headerLine, delimiter).length;
+    if (colCount > maxColumns) {
+      maxColumns = colCount;
+      selected = delimiter;
+    }
+  }
+
+  return selected;
+};
+
 const parseDelimitedText = (text, delimiter) => {
   const lines = text
     .split(/\r?\n/)
@@ -70,7 +86,7 @@ const parseDelimitedText = (text, delimiter) => {
     throw new Error('Encabezados requeridos: link,mensaje');
   }
 
-  return lines
+  const rows = lines
     .slice(1)
     .map((line, idx) => {
       const cols = splitRow(line, delimiter);
@@ -81,15 +97,31 @@ const parseDelimitedText = (text, delimiter) => {
       };
     })
     .filter((r) => r.link && r.mensaje);
+
+  if (!rows.length) {
+    throw new Error('No se detectaron filas válidas con link y mensaje.');
+  }
+
+  return rows;
 };
 
-const parseCsv = (text) => parseDelimitedText(text, ',');
+const parseDocumentText = (text) => {
+  const firstLine = text.split(/\r?\n/).find((line) => line.trim().length > 0) || '';
+  const delimiter = getDelimiterFromHeader(firstLine);
+  return parseDelimitedText(text, delimiter);
+};
+
 const parseTable = (text) => parseDelimitedText(text, '\t');
 
 const getSheetsCsvUrl = (inputUrl) => {
   const url = new URL(inputUrl);
+
   if (!url.hostname.includes('docs.google.com') || !url.pathname.includes('/spreadsheets/')) {
     throw new Error('URL inválida de Google Sheets.');
+  }
+
+  if (url.pathname.includes('/export')) {
+    return inputUrl;
   }
 
   const match = url.pathname.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
@@ -98,7 +130,10 @@ const getSheetsCsvUrl = (inputUrl) => {
   }
 
   const sheetId = match[1];
-  const gid = url.searchParams.get('gid') || '0';
+  const queryGid = url.searchParams.get('gid');
+  const hashGid = (url.hash.match(/gid=([0-9]+)/) || [])[1];
+  const gid = queryGid || hashGid || '0';
+
   return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
 };
 
@@ -125,13 +160,20 @@ csvInput.addEventListener('change', async (event) => {
     return;
   }
 
+  const lowerName = file.name.toLowerCase();
+  if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls')) {
+    parsedRows = [];
+    setStatus('Archivo Excel detectado. Exporta a CSV o pega la tabla (copiar/pegar) desde Excel.');
+    return;
+  }
+
   const text = await file.text();
   try {
-    parsedRows = parseCsv(text);
-    setStatus(`CSV cargado correctamente.\nFilas válidas: ${parsedRows.length}`);
+    parsedRows = parseDocumentText(text);
+    setStatus(`Documento cargado correctamente.\nFilas válidas: ${parsedRows.length}`);
   } catch (error) {
     parsedRows = [];
-    setStatus(`Error CSV: ${error.message}`);
+    setStatus(`Error documento: ${error.message}`);
   }
 });
 
@@ -151,11 +193,11 @@ loadSheetsBtn.addEventListener('click', async () => {
     const response = await fetch(exportUrl);
 
     if (!response.ok) {
-      throw new Error('No se pudo descargar la hoja. Verifica permisos públicos.');
+      throw new Error('No se pudo descargar la hoja. Verifica permisos de acceso público.');
     }
 
     const csvText = await response.text();
-    parsedRows = parseCsv(csvText);
+    parsedRows = parseDocumentText(csvText);
     setStatus(`Google Sheets importado correctamente.\nFilas válidas: ${parsedRows.length}`);
   } catch (error) {
     parsedRows = [];
@@ -165,7 +207,7 @@ loadSheetsBtn.addEventListener('click', async () => {
 
 startBtn.addEventListener('click', async () => {
   if (!parsedRows.length) {
-    setStatus('Primero carga datos válidos (CSV, tabla o Google Sheets).');
+    setStatus('Primero carga datos válidos (documento, tabla o Google Sheets).');
     return;
   }
 

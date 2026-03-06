@@ -10,19 +10,19 @@
     <main>
       <h1>WA Lead Sender</h1>
       <p class="hint">
-        Importa datos desde <strong>CSV</strong>, pega tabla desde <strong>Excel/Sheets</strong>, o usa URL pública de <strong>Google Sheets</strong>.
+        Importa datos desde <strong>documento CSV/TXT/TSV</strong>, pega tabla desde <strong>Excel/Sheets</strong>, o usa URL de <strong>Google Sheets</strong>.
       </p>
 
       <label for="sourceType">Origen de datos</label>
       <select id="sourceType">
-        <option value="csv">Archivo CSV</option>
+        <option value="csv">Documento (CSV/TXT/TSV)</option>
         <option value="table">Pegar tabla (Excel / Sheets)</option>
         <option value="gSheets">Google Sheets (URL pública)</option>
       </select>
 
       <section id="csvSection" class="source-section">
-        <label for="csvFile">Archivo CSV</label>
-        <input id="csvFile" type="file" accept=".csv,text/csv" />
+        <label for="csvFile">Documento (CSV/TXT/TSV)</label>
+        <input id="csvFile" type="file" accept=".csv,.txt,.tsv,text/csv,text/tab-separated-values,text/plain" />
       </section>
 
       <section id="tableSection" class="source-section hidden">

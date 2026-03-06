@@ -2,9 +2,9 @@
 
 Extensión para **WhatsApp Web** que permite importar leads y mensajes desde:
 
-- **CSV** (archivo)
-- **Excel / Google Sheets** (pegando tabla con tabulaciones)
-- **Google Sheets por URL pública** (export CSV automático)
+- **Documento CSV/TXT/TSV** (subida de archivo)
+- **Excel / Google Sheets** (copiar/pegar tabla)
+- **Google Sheets por URL** (link normal o link de exportación CSV)
 
 Luego automatiza el envío de mensajes uno por uno.
 
@@ -25,6 +25,13 @@ https://wa.me/5491122334455,"Hola, te contacto por..."
 https://web.whatsapp.com/send?phone=5491199988877,"¿Te interesa recibir info?"
 ```
 
+## Nota sobre archivos Excel (`.xlsx` / `.xls`)
+
+- La extensión ahora detecta estos archivos y te guía con un mensaje.
+- Para cargar datos desde Excel:
+  1. Exporta a CSV/TXT/TSV y súbelo, o
+  2. Copia el rango con encabezados `link` y `mensaje` y pégalo en la opción **Pegar tabla**.
+
 ## Instalar localmente
 
 1. Abre `chrome://extensions`.
@@ -37,9 +44,9 @@ https://web.whatsapp.com/send?phone=5491199988877,"¿Te interesa recibir info?"
 1. Abre y autentica `https://web.whatsapp.com/`.
 2. Abre el popup de la extensión.
 3. Elige origen:
-   - **Archivo CSV**: sube tu archivo.
+   - **Documento**: sube CSV/TXT/TSV (coma, punto y coma o tabulador).
    - **Pegar tabla (Excel/Sheets)**: copia y pega rango con encabezados.
-   - **Google Sheets URL**: pega URL de hoja pública/compartida.
+   - **Google Sheets URL**: pega URL de hoja (incluye soporte para `#gid=`).
 4. Ajusta pausa entre envíos (recomendado >= 8000 ms).
 5. Pulsa **Iniciar envío masivo**.
 6. Para cortar el proceso, pulsa **Detener**.
@@ -47,5 +54,6 @@ https://web.whatsapp.com/send?phone=5491199988877,"¿Te interesa recibir info?"
 ## Notas técnicas
 
 - `popup.js` importa y normaliza datos desde múltiples orígenes.
+- Parser de documentos detecta delimitador automáticamente (`,`, `;`, `\t`).
 - `content.js` navega por cada chat, espera botón enviar y hace click.
 - Links `wa.me` se transforman a URLs `web.whatsapp.com/send`.
