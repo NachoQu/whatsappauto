@@ -55,7 +55,7 @@ https://web.whatsapp.com/send?phone=5491199988877,"¿Te interesa recibir info?"
 
 - `popup.js` importa y normaliza datos desde múltiples orígenes.
 - Parser de documentos detecta delimitador automáticamente (`,`, `;`, `\t`).
-- `content.js` navega por cada chat, espera botón enviar y hace click.
+- `content.js` navega por cada chat y dispara Enter en el cuadro de mensaje de WhatsApp para enviar (con fallback al botón enviar).
 - Links `wa.me` se transforman a URLs `web.whatsapp.com/send`.
 
 
@@ -73,3 +73,6 @@ Si ves `Encabezados requeridos: link,mensaje` al pegar datos, revisa que:
 - Verifica que la pestaña activa sea `https://web.whatsapp.com` (no el popup ni otra web).
 - Recarga la extensión desde `chrome://extensions` después de actualizarla.
 - La extensión ahora reintenta inyectar automáticamente `content.js` si Chrome no lo detecta en la pestaña, y muestra un error claro en el estado si falla.
+
+
+- El envío se ejecuta dentro del chat de WhatsApp Web (tecla Enter sobre el composer), no en campos externos.
