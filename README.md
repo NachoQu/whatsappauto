@@ -55,7 +55,7 @@ https://web.whatsapp.com/send?phone=5491199988877,"¿Te interesa recibir info?"
 
 - `popup.js` importa y normaliza datos desde múltiples orígenes.
 - Parser de documentos detecta delimitador automáticamente (`,`, `;`, `\t`).
-- `content.js` navega por cada chat y dispara Enter en el cuadro de mensaje de WhatsApp para enviar (con fallback al botón enviar).
+- `content.js` navega por cada chat y envía priorizando click en el botón Enviar, verificando que el mensaje salga del composer; si no funciona, usa Enter como fallback.
 - Links `wa.me` se transforman a URLs `web.whatsapp.com/send`.
 
 

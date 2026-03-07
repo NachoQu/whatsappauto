@@ -22,31 +22,54 @@ const normalizeChatUrl = (rawLink, message) => {
   throw new Error('Link de WhatsApp no válido');
 };
 
+const getComposer = () => document.querySelector('footer [contenteditable="true"][role="textbox"], footer div[contenteditable="true"]');
+
 const waitForComposer = async (timeoutMs = 30000) => {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    const composer = document.querySelector('footer [contenteditable="true"][role="textbox"], div[contenteditable="true"][data-tab="10"]');
+    const composer = getComposer();
     if (composer) {
       return composer;
     }
-    await sleep(500);
+    await sleep(400);
   }
   throw new Error('No se encontró el cuadro de mensaje (timeout)');
 };
 
-const waitForSendButton = async (timeoutMs = 10000) => {
+const getSendButton = () => {
+  const selectors = [
+    'footer button[aria-label="Enviar"]',
+    'footer button[title="Enviar"]',
+    'footer button span[data-icon="send"]',
+    'footer button span[data-icon="wds-ic-send-filled"]',
+  ];
+
+  for (const selector of selectors) {
+    const node = document.querySelector(selector);
+    const button = node?.closest ? node.closest('button') : node;
+    if (button && !button.disabled) {
+      return button;
+    }
+  }
+
+  return null;
+};
+
+const waitForSendButton = async (timeoutMs = 15000) => {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    const sendBtn = document.querySelector('button span[data-icon="send"], button span[data-icon="wds-ic-send-filled"]')?.closest('button');
-    if (sendBtn) {
-      return sendBtn;
+    const btn = getSendButton();
+    if (btn) {
+      return btn;
     }
-    await sleep(400);
+    await sleep(300);
   }
   return null;
 };
 
-const sendWithEnter = (composer) => {
+const getComposerText = (composer) => (composer?.textContent || '').trim();
+
+const pressEnterInComposer = (composer) => {
   composer.focus();
 
   const eventOptions = {
@@ -61,6 +84,45 @@ const sendWithEnter = (composer) => {
   composer.dispatchEvent(new KeyboardEvent('keydown', eventOptions));
   composer.dispatchEvent(new KeyboardEvent('keypress', eventOptions));
   composer.dispatchEvent(new KeyboardEvent('keyup', eventOptions));
+};
+
+const ensureMessageSent = async (expectedText) => {
+  const started = Date.now();
+  while (Date.now() - started < 8000) {
+    const composer = getComposer();
+    const currentText = getComposerText(composer);
+    if (!currentText || currentText !== expectedText) {
+      return true;
+    }
+    await sleep(250);
+  }
+  return false;
+};
+
+const sendCurrentMessage = async () => {
+  const composer = await waitForComposer();
+  const beforeText = getComposerText(composer);
+
+  if (!beforeText) {
+    throw new Error('No hay mensaje cargado para enviar.');
+  }
+
+  const button = await waitForSendButton();
+  if (button) {
+    button.click();
+    const sentByClick = await ensureMessageSent(beforeText);
+    if (sentByClick) {
+      return;
+    }
+  }
+
+  pressEnterInComposer(composer);
+  const sentByEnter = await ensureMessageSent(beforeText);
+  if (sentByEnter) {
+    return;
+  }
+
+  throw new Error('No se pudo enviar el mensaje (ni botón ni Enter).');
 };
 
 const processRows = async (rows, delayMs) => {
@@ -79,15 +141,7 @@ const processRows = async (rows, delayMs) => {
       window.location.href = targetUrl;
       await sleep(7000);
 
-      const composer = await waitForComposer();
-      sendWithEnter(composer);
-
-      await sleep(700);
-      const possibleSendBtn = await waitForSendButton();
-      if (possibleSendBtn) {
-        possibleSendBtn.click();
-      }
-
+      await sendCurrentMessage();
       console.info(`[WA Bulk] Enviado ${i + 1}/${rows.length} (fila CSV ${row}).`);
     } catch (error) {
       console.error(`[WA Bulk] Error en fila ${row}: ${error.message}`);
